@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -6,6 +6,7 @@ import Icon from '@/components/ui/icon';
 
 const Index = () => {
   const [activeSection, setActiveSection] = useState('home');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const mechanics = [
     {
@@ -183,6 +184,17 @@ const Index = () => {
     { name: 'Миска', ingredients: '3 доски', category: 'Еда', emoji: '🥣' }
   ];
 
+  const filteredCrafts = useMemo(() => {
+    if (!searchQuery.trim()) return crafts;
+    
+    const query = searchQuery.toLowerCase();
+    return crafts.filter(craft => 
+      craft.name.toLowerCase().includes(query) || 
+      craft.ingredients.toLowerCase().includes(query) ||
+      craft.category.toLowerCase().includes(query)
+    );
+  }, [searchQuery]);
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-minecraft-water/20 via-minecraft-grass/10 to-minecraft-stone/20">
       <nav className="bg-minecraft-dark/95 backdrop-blur-sm border-b border-minecraft-grass/30 sticky top-0 z-50">
@@ -313,6 +325,27 @@ const Index = () => {
         <section className="container mx-auto px-4 py-12 animate-fade-in">
           <h2 className="text-4xl font-bold mb-8 text-minecraft-dark">Рецепты крафтов (до v1.21)</h2>
           
+          <div className="mb-6 max-w-md mx-auto">
+            <div className="relative">
+              <Icon name="Search" className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+              <input
+                type="text"
+                placeholder="Поиск крафтов..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-3 border-2 border-minecraft-stone/20 rounded-lg focus:border-minecraft-grass focus:outline-none transition-colors"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  <Icon name="X" className="h-5 w-5" />
+                </button>
+              )}
+            </div>
+          </div>
+          
           <Tabs defaultValue="all" className="w-full">
             <TabsList className="grid w-full grid-cols-5 mb-8">
               <TabsTrigger value="all">Все</TabsTrigger>
@@ -323,7 +356,14 @@ const Index = () => {
             </TabsList>
             
             <TabsContent value="all" className="grid md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {crafts.map((craft, index) => (
+              {filteredCrafts.length === 0 ? (
+                <div className="col-span-full text-center py-12">
+                  <Icon name="Search" className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
+                  <p className="text-xl text-muted-foreground">Крафты не найдены</p>
+                  <p className="text-sm text-muted-foreground mt-2">Попробуйте изменить поисковый запрос</p>
+                </div>
+              ) : null}
+              {filteredCrafts.map((craft, index) => (
                 <Card 
                   key={index}
                   className="hover:scale-105 transition-all border-2 hover:border-minecraft-grass cursor-pointer"
@@ -343,7 +383,7 @@ const Index = () => {
             </TabsContent>
             
             <TabsContent value="tools" className="grid md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {crafts.filter(c => c.category === 'Инструменты').map((craft, index) => (
+              {filteredCrafts.filter(c => c.category === 'Инструменты').map((craft, index) => (
                 <Card 
                   key={index}
                   className="hover:scale-105 transition-all border-2 hover:border-minecraft-grass"
@@ -360,7 +400,7 @@ const Index = () => {
             </TabsContent>
             
             <TabsContent value="weapon" className="grid md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {crafts.filter(c => c.category === 'Оружие' || c.category === 'Защита').map((craft, index) => (
+              {filteredCrafts.filter(c => c.category === 'Оружие' || c.category === 'Броня').map((craft, index) => (
                 <Card 
                   key={index}
                   className="hover:scale-105 transition-all border-2 hover:border-minecraft-grass"
@@ -377,7 +417,7 @@ const Index = () => {
             </TabsContent>
             
             <TabsContent value="blocks" className="grid md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {crafts.filter(c => c.category === 'Блоки' || c.category === 'Хранение').map((craft, index) => (
+              {filteredCrafts.filter(c => c.category === 'Блоки').map((craft, index) => (
                 <Card 
                   key={index}
                   className="hover:scale-105 transition-all border-2 hover:border-minecraft-grass"
@@ -394,7 +434,7 @@ const Index = () => {
             </TabsContent>
             
             <TabsContent value="other" className="grid md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {crafts.filter(c => !['Инструменты', 'Оружие', 'Защита', 'Блоки', 'Хранение'].includes(c.category)).map((craft, index) => (
+              {filteredCrafts.filter(c => !['Инструменты', 'Оружие', 'Броня', 'Блоки'].includes(c.category)).map((craft, index) => (
                 <Card 
                   key={index}
                   className="hover:scale-105 transition-all border-2 hover:border-minecraft-grass"
